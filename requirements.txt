@@ -7,5 +7,5 @@ langsmith
 ipykernel
 pytest
 pydantic
-
+streamlit
 
