@@ -1,19 +1,9 @@
-"""
-Streamlit UI for Tribute Lens (calls the pipeline directly).
-
-Run:
-    pip install streamlit
-    streamlit run streamlit_app.py
-
-Notes:
-- This app imports your AI pipeline: src.pipeline. Make sure your PYTHONPATH includes project root
-  (running from repo root is easiest).
-- Ensure your .env is configured (Groq key, LangSmith, etc.) if pipeline requires it.
-"""
-
 import json
 from typing import Optional, List, Any
 import html
+from wordcloud import WordCloud
+from io import BytesIO
+from PIL import Image
 
 import streamlit as st
 
@@ -77,52 +67,68 @@ def render_quote_box(quote: str):
         unsafe_allow_html=True,
     )
 
-def render_memory_cloud(memory_cloud: List[dict]):
+def render_memory_cloud(memory_cloud: list):
     """
-    Render a simple memory cloud using inline-styled spans sized by frequency.
-    Expects memory_cloud as list of {"word": str, "frequency": int}.
+    Render a word cloud image based on memory_cloud data.
+    Accepts memory_cloud as list of {"word": str, "frequency": int} OR
+    pydantic model objects with `.word` and `.frequency` attributes.
     """
     if not memory_cloud:
         st.info("No memory cloud data available.")
         return
 
-    # normalize list of dicts or pydantic models
     items = []
     for it in memory_cloud:
+        # handle dict-like items
         if isinstance(it, dict):
-            word = it.get("word")
-            freq = int(it.get("frequency", 0))
+            word = it.get("word") or it.get("text") or it.get("label")
+            freq = it.get("frequency") or it.get("freq") or it.get("count")
         else:
-            # pydantic model (WordCloudItem)
-            word = getattr(it, "word", None)
-            freq = int(getattr(it, "frequency", 0))
-        if word:
-            items.append({"word": str(word), "frequency": freq})
+            # handle pydantic model or arbitrary object
+            word = getattr(it, "word", None) or getattr(it, "text", None) or getattr(it, "label", None)
+            freq = getattr(it, "frequency", None) or getattr(it, "freq", None) or getattr(it, "count", None)
+
+        if not word:
+            continue
+
+        # Clean and coerce
+        word_str = str(word).strip()
+        try:
+            freq_int = int(freq) if freq is not None else 1
+            if freq_int < 0:
+                freq_int = abs(freq_int)
+        except Exception:
+            freq_int = 1
+
+        if word_str:
+            items.append({"word": word_str, "frequency": freq_int})
 
     if not items:
-        st.info("No memory cloud data available.")
+        st.info("No valid words to render in cloud.")
         return
 
-    freqs = [i["frequency"] for i in items]
-    min_f, max_f = min(freqs), max(freqs)
-    # scale font size between 14px and 48px
-    def scale_size(f):
-        if max_f == min_f:
-            return 20
-        return int(14 + (f - min_f) / (max_f - min_f) * (48 - 14))
+    # Build frequency dict for WordCloud
+    freq_dict = {it["word"]: it["frequency"] for it in items}
 
-    cloud_html = "<div style='padding:10px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;'>"
-    for it in items:
-        size = scale_size(it["frequency"])
-        word_safe = html.escape(it["word"])
-        cloud_html += (
-            f"<span title='freq: {it['frequency']}' "
-            f"style='font-size:{size}px;line-height:1;margin:6px;color:#0f172a;"
-            f"padding:4px 6px;border-radius:6px;background:linear-gradient(90deg,#f8fafc,#eef2ff);'>"
-            f"{word_safe}</span>"
-        )
-    cloud_html += "</div>"
-    st.markdown(cloud_html, unsafe_allow_html=True)
+    # Generate word cloud
+    wc = WordCloud(
+        width=500,                 
+        height=300,
+        background_color="ivory",   
+        colormap="magma",         
+        prefer_horizontal=0.7,      
+        collocations=False,
+        min_font_size=10,           
+        max_font_size=60,           
+        contour_color="steelblue",  
+        contour_width=1,
+        font_path=None,            
+        relative_scaling=0.5,      
+    ).generate_from_frequencies(freq_dict)
+
+    # Convert to image and display
+    img = wc.to_image()
+    st.image(img, caption="Memory Cloud", use_container_width=True)
 
 # ---------- UI ----------
 st.markdown("# Tribute Lens — Condolence Condenser")
@@ -180,8 +186,7 @@ with col2:
             ],
         }
         old_result_input = json.dumps(sample_old, ensure_ascii=False, indent=2)
-        st.experimental_set_query_params()  # dummy to allow rerun
-        # set into text_area by re-render is not straightforward; prompt user to paste if needed
+        st.experimental_set_query_params() 
         st.success("Sample shown below — paste it into the 'Previous CondenseResult' field.")
 
 # ---------- Run pipeline ----------

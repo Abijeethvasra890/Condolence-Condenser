@@ -8,4 +8,4 @@ ipykernel
 pytest
 pydantic
 streamlit
-
+wordcloud
