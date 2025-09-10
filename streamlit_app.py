@@ -111,25 +111,6 @@ def render_memory_cloud(memory_cloud: list):
     # Build frequency dict for WordCloud
     freq_dict = {it["word"]: it["frequency"] for it in items}
 
-    # Generate word cloud
-    # wc = WordCloud(
-    #     width=500,                 
-    #     height=300,
-    #     background_color="ivory",   
-    #     colormap="magma",         
-    #     prefer_horizontal=0.7,      
-    #     collocations=False,
-    #     min_font_size=10,           
-    #     max_font_size=60,           
-    #     contour_color="steelblue",  
-    #     contour_width=1,
-    #     font_path=None,            
-    #     relative_scaling=0.5,      
-    # ).generate_from_frequencies(freq_dict)
-
-    # # Convert to image and display
-    # img = wc.to_image()
-    # st.image(img, caption="Memory Cloud", use_container_width=True)
     wc = WordCloud(
         width=400,
         height=200,
@@ -170,13 +151,12 @@ with col1:
         height=300,
         value=json.dumps(
             [
-                "Mr. Anil Sharma guided me through physics at Greenwood High with so much patience. I owe my love for science to him.",
-                "Anil sir stayed late for weeks to help me build my solar cooker for the science fair—he believed in me before I did.",
-                "We will miss his harmonium on Sunday mornings; his bhajans filled the temple with calm and hope.",
-                "On treks in the Western Ghats, Anil made sure the slowest walker felt safe—no one was ever left behind.",
-                "His laughter and terrible dad jokes in the staff room made hard days easier. He cared for his colleagues like family.",
-                "After exam results, Anil and Neeta opened their home for chai and reassurance. Their kindness steadied so many of us.",
-                "To Kavya and Rohan: your father taught an entire generation what kindness looks like in action.",
+                  "John was always there for us — the first to help, the last to leave.",
+                    "I'll never forget his laughter on summer evenings by the lake.",
+                    "He taught me patience and kindness just by the way he lived.",
+                    "Our church will miss his gentle advice and warm smile.",
+                    "I loved his Sunday pancakes; he made them for everyone without fail.",
+                    "John inspired me to volunteer; he believed in giving more than taking.",
             ],
             ensure_ascii=False,
             indent=2,
