@@ -4,6 +4,7 @@ import html
 from wordcloud import WordCloud
 from io import BytesIO
 from PIL import Image
+import matplotlib.pyplot as plt
 
 import streamlit as st
 
@@ -111,24 +112,47 @@ def render_memory_cloud(memory_cloud: list):
     freq_dict = {it["word"]: it["frequency"] for it in items}
 
     # Generate word cloud
+    # wc = WordCloud(
+    #     width=500,                 
+    #     height=300,
+    #     background_color="ivory",   
+    #     colormap="magma",         
+    #     prefer_horizontal=0.7,      
+    #     collocations=False,
+    #     min_font_size=10,           
+    #     max_font_size=60,           
+    #     contour_color="steelblue",  
+    #     contour_width=1,
+    #     font_path=None,            
+    #     relative_scaling=0.5,      
+    # ).generate_from_frequencies(freq_dict)
+
+    # # Convert to image and display
+    # img = wc.to_image()
+    # st.image(img, caption="Memory Cloud", use_container_width=True)
     wc = WordCloud(
-        width=500,                 
-        height=300,
-        background_color="ivory",   
-        colormap="magma",         
-        prefer_horizontal=0.7,      
+        width=400,
+        height=200,
+        background_color="ivory",
+        colormap="magma",
+        prefer_horizontal=0.7,
         collocations=False,
-        min_font_size=10,           
-        max_font_size=60,           
-        contour_color="steelblue",  
+        min_font_size=5,
+        max_font_size=50,
+        contour_color="steelblue",
         contour_width=1,
-        font_path=None,            
-        relative_scaling=0.5,      
+        relative_scaling=0.5,
     ).generate_from_frequencies(freq_dict)
 
-    # Convert to image and display
+    # Control display size
+    # Convert to PIL image
     img = wc.to_image()
-    st.image(img, caption="Memory Cloud", use_container_width=True)
+
+    # Resize explicitly (e.g., half size)
+    img_resized = img.resize((800, 450))  # (width, height) in pixels
+
+    # Now Streamlit will honor this size
+    st.image(img_resized, caption="Memory Cloud")
 
 # ---------- UI ----------
 st.markdown("# Tribute Lens — Condolence Condenser")
